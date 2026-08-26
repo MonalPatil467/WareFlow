@@ -115,6 +115,38 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    public InventoryResponse getInventoryByProductId(Long productId) {
+
+        Long companyId = TenantContext.getCompanyId();
+
+        if (companyId == null) {
+            throw new BadRequestException(
+                    "Company not found in JWT.");
+        }
+
+        if (productId == null || productId <= 0) {
+            throw new BadRequestException(
+                    "Invalid product id.");
+        }
+
+        Inventory inventory = inventoryRepository
+                .findByProduct_IdAndCompanyId(
+                        productId,
+                        companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Inventory not found for product id : "
+                                        + productId));
+
+        if (!inventory.isActive()) {
+            throw new ResourceNotFoundException(
+                    "Inventory not found for product id : "
+                            + productId);
+        }
+
+        return mapToResponse(inventory);
+    }
+    @Override
     public List<InventoryResponse> getAllInventory() {
 
         Long companyId = TenantContext.getCompanyId();
