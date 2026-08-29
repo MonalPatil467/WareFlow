@@ -19,9 +19,17 @@ public interface InventoryRepository
             Long productId,
             Long companyId);
 
-    boolean existsByProduct_IdAndCompanyId(
+    boolean existsByProduct_IdAndWarehouse_IdAndCompanyId(
             Long productId,
-            Long companyId);
+            Long warehouseId,
+            Long companyId
+    );
+
+    Optional<Inventory> findByProduct_IdAndWarehouse_IdAndCompanyId(
+            Long productId,
+            Long warehouseId,
+            Long companyId
+    );
 
     List<Inventory> findByQuantityLessThanEqual(
             Integer quantity);

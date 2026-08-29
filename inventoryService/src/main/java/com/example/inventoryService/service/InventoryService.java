@@ -22,5 +22,7 @@ public interface InventoryService {
 
     List<InventoryResponse> getLowStockProducts();
 
+
+
     void deleteInventory(Long id);
 }

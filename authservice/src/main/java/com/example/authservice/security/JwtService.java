@@ -50,22 +50,22 @@ public class JwtService {
 
         return Jwts.builder()
 
-                // Email / username
+
                 .subject(user.getUsername())
 
-                // User ID
+
                 .claim("userId", user.getId())
 
-                // Company ID
+
                 .claim("companyId", user.getCompanyId())
 
-                // User role
+
                 .claim("role", user.getRole().name())
 
-                // Token creation time
+
                 .issuedAt(new Date())
 
-                // Token expiry
+
                 .expiration(
                         new Date(
                                 System.currentTimeMillis()
@@ -73,7 +73,7 @@ public class JwtService {
                         )
                 )
 
-                // Sign token
+
                 .signWith(getSignInKey())
 
                 .compact();

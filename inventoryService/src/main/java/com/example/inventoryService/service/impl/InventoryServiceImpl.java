@@ -5,11 +5,13 @@ import com.example.inventoryService.dtos.request.UpdateInventoryRequest;
 import com.example.inventoryService.dtos.response.InventoryResponse;
 import com.example.inventoryService.entity.Inventory;
 import com.example.inventoryService.entity.Product;
+import com.example.inventoryService.entity.Warehouse;
 import com.example.inventoryService.exception.BadRequestException;
 import com.example.inventoryService.exception.ResourceAlreadyExistsException;
 import com.example.inventoryService.exception.ResourceNotFoundException;
 import com.example.inventoryService.repository.InventoryRepository;
 import com.example.inventoryService.repository.ProductRepository;
+import com.example.inventoryService.repository.WarehouseRepository;
 import com.example.inventoryService.security.TenantContext;
 import com.example.inventoryService.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
 
+    private final WarehouseRepository warehouseRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
 
@@ -33,46 +36,88 @@ public class InventoryServiceImpl implements InventoryService {
             throw new BadRequestException("Company not found in JWT.");
         }
 
+        if (request == null) {
+            throw new BadRequestException("Inventory request cannot be null.");
+        }
+
         Product product = productRepository
-                .findByIdAndCompanyId(request.getProductId(), companyId)
+                .findByIdAndCompanyId(
+                        request.getProductId(),
+                        companyId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Product not found with id : " + request.getProductId()));
+                                "Product not found with id : "
+                                        + request.getProductId()));
 
-        if (inventoryRepository.existsByProduct_IdAndCompanyId(
-                request.getProductId(), companyId)) {
+        if (!product.isActive()) {
+            throw new BadRequestException(
+                    "Cannot create inventory for an inactive product.");
+        }
+
+        Warehouse warehouse = warehouseRepository
+                .findByIdAndCompanyId(
+                        request.getWarehouseId(),
+                        companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Warehouse not found with id : "
+                                        + request.getWarehouseId()));
+
+        if (!warehouse.isActive()) {
+            throw new BadRequestException(
+                    "Cannot add inventory to an inactive warehouse.");
+        }
+
+        if (inventoryRepository
+                .existsByProduct_IdAndWarehouse_IdAndCompanyId(
+                        request.getProductId(),
+                        request.getWarehouseId(),
+                        companyId)) {
 
             throw new ResourceAlreadyExistsException(
-                    "Inventory already exists for product : "
-                            + product.getProductName());
+                    "Inventory already exists for product '"
+                            + product.getProductName()
+                            + "' in warehouse '"
+                            + warehouse.getWarehouseName()
+                            + "'.");
         }
 
         Inventory inventory = Inventory.builder()
                 .product(product)
+                .warehouse(warehouse)
                 .quantity(request.getQuantity())
                 .reorderLevel(request.getReorderLevel())
                 .maximumStock(request.getMaximumStock())
-                .warehouseLocation(request.getWarehouseLocation())
                 .companyId(companyId)
                 .active(true)
                 .build();
 
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory =
+                inventoryRepository.save(inventory);
 
         return mapToResponse(savedInventory);
     }
+
     @Override
-    public InventoryResponse updateInventory(Long id,
-                                             UpdateInventoryRequest request) {
+    public InventoryResponse updateInventory(
+            Long id,
+            UpdateInventoryRequest request) {
 
         Long companyId = TenantContext.getCompanyId();
 
         if (companyId == null) {
-            throw new BadRequestException("Company not found in JWT.");
+            throw new BadRequestException(
+                    "Company not found in JWT.");
         }
 
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid inventory id.");
+            throw new BadRequestException(
+                    "Invalid inventory id.");
+        }
+
+        if (request == null) {
+            throw new BadRequestException(
+                    "Inventory request cannot be null.");
         }
 
         Inventory inventory = inventoryRepository
@@ -84,10 +129,10 @@ public class InventoryServiceImpl implements InventoryService {
         inventory.setQuantity(request.getQuantity());
         inventory.setReorderLevel(request.getReorderLevel());
         inventory.setMaximumStock(request.getMaximumStock());
-        inventory.setWarehouseLocation(request.getWarehouseLocation());
         inventory.setActive(request.isActive());
 
-        Inventory updatedInventory = inventoryRepository.save(inventory);
+        Inventory updatedInventory =
+                inventoryRepository.save(inventory);
 
         return mapToResponse(updatedInventory);
     }
@@ -207,6 +252,7 @@ public class InventoryServiceImpl implements InventoryService {
     private InventoryResponse mapToResponse(Inventory inventory) {
 
         Product product = inventory.getProduct();
+        Warehouse warehouse = inventory.getWarehouse();
 
         return InventoryResponse.builder()
                 .id(inventory.getId())
@@ -216,7 +262,8 @@ public class InventoryServiceImpl implements InventoryService {
                 .quantity(inventory.getQuantity())
                 .reorderLevel(inventory.getReorderLevel())
                 .maximumStock(inventory.getMaximumStock())
-                .warehouseLocation(inventory.getWarehouseLocation())
+                .warehouseId(warehouse.getId())
+                .warehouseName(warehouse.getWarehouseName())
                 .active(inventory.isActive())
                 .build();
     }

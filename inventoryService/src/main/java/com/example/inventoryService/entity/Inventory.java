@@ -1,13 +1,24 @@
 package com.example.inventoryService.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory")
+@Table(
+        name = "inventory",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_inventory_product_warehouse_company",
+                        columnNames = {
+                                "product_id",
+                                "warehouse_id",
+                                "company_id"
+                        }
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,9 +30,13 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private Warehouse warehouse;
 
     @Column(nullable = false)
     private Integer quantity;
@@ -31,9 +46,6 @@ public class Inventory {
 
     @Column(nullable = false)
     private Integer maximumStock;
-
-    @Column(nullable = false)
-    private String warehouseLocation;
 
     @Column(nullable = false)
     private Long companyId;
