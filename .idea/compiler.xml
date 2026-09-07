@@ -8,8 +8,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="apiGateway" />
+        <module name="OrderService" />
+        <module name="eurekaServer" />
+        <module name="PaymentService" />
       </profile>
-      <profile name="Annotation profile for InventoryService" enabled="true">
+      <profile name="Annotation profile for CompanyService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -17,16 +20,19 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
         <module name="auth-service" />
-        <module name="inventoryService" />
         <module name="companyservice" />
+        <module name="inventoryService" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="OrderService" options="-parameters" />
+      <module name="PaymentService" options="-parameters" />
       <module name="apiGateway" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="companyservice" options="-parameters" />
+      <module name="eurekaServer" options="-parameters" />
       <module name="inventoryService" options="-parameters" />
     </option>
   </component>

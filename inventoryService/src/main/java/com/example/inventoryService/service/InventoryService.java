@@ -10,13 +10,19 @@ public interface InventoryService {
 
     InventoryResponse createInventory(CreateInventoryRequest request);
 
-    InventoryResponse updateInventory(Long id, UpdateInventoryRequest request);
+    InventoryResponse updateInventory(
+            Long id,
+            UpdateInventoryRequest request);
 
     InventoryResponse getInventoryById(Long id);
+
+    InventoryResponse getInventoryByProductId(Long productId);
 
     List<InventoryResponse> getAllInventory();
 
     List<InventoryResponse> getLowStockProducts();
+
+
 
     void deleteInventory(Long id);
 }
