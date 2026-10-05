@@ -1,7 +1,6 @@
 package com.example.inventoryService.dtos.request;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -10,6 +9,9 @@ public class CreateInventoryRequest {
 
     @NotNull
     private Long productId;
+
+    @NotNull
+    private Long warehouseId;
 
     @NotNull
     @Min(0)
@@ -22,7 +24,4 @@ public class CreateInventoryRequest {
     @NotNull
     @Min(0)
     private Integer maximumStock;
-
-    @NotBlank
-    private String warehouseLocation;
 }
