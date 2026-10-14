@@ -1,433 +1,275 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "http://localhost:8090";
 
 const token = localStorage.getItem("wareflow_token");
 
-if (!token) {
-    window.location.href = "index.html";
+let user = null;
+
+try {
+    user = JSON.parse(localStorage.getItem("wareflow_user") || "null");
+} catch {
+    user = null;
 }
 
-const user = JSON.parse(
-    localStorage.getItem("wareflow_user") || "null"
-);
+if (!token) {
+    window.location.replace("index.html");
+}
 
-const sidebarUserName =
-    document.getElementById("sidebarUserName");
+function getElement(id) {
+    return document.getElementById(id);
+}
 
-const sidebarUserRole =
-    document.getElementById("sidebarUserRole");
+function setText(id, value) {
+    const element = getElement(id);
 
-const profileName =
-    document.getElementById("profileName");
-
-const profileRole =
-    document.getElementById("profileRole");
-
-const userAvatar =
-    document.getElementById("userAvatar");
-
-const profileAvatar =
-    document.getElementById("profileAvatar");
-
-const welcomeText =
-    document.getElementById("welcomeText");
-
-const logoutButton =
-    document.getElementById("logoutButton");
-
-const menuButton =
-    document.getElementById("menuButton");
-
-const sidebar =
-    document.getElementById("sidebar");
-
+    if (element) {
+        element.textContent = value ?? "";
+    }
+}
 
 function getUserName() {
-
-    if (!user) {
-        return "User";
-    }
-
-    return (
-        user.name ||
-        user.fullName ||
-        user.username ||
-        user.email ||
-        "User"
-    );
-
+    return user?.name ||
+        user?.fullName ||
+        user?.firstName ||
+        user?.username ||
+        user?.email ||
+        "User";
 }
-
 
 function getUserRole() {
+    const role = user?.role || user?.roles?.[0] || "";
 
-    if (!user) {
-        return "";
-    }
-
-    return (
-        user.role ||
-        user.roles?.[0] ||
-        ""
-    );
-
+    return typeof role === "string" ? role : "";
 }
 
-
 function getInitials(name) {
+    const words = String(name || "User")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
 
-    if (!name) {
+    if (words.length === 0) {
         return "U";
     }
-
-    const words = name.trim().split(" ");
 
     if (words.length === 1) {
         return words[0].substring(0, 2).toUpperCase();
     }
 
-    return (
-        words[0][0] +
-        words[words.length - 1][0]
-    ).toUpperCase();
-
+    return (words[0][0] + words[words.length - 1][0])
+        .toUpperCase();
 }
-
 
 function setupUser() {
-
     const name = getUserName();
-
     const role = getUserRole();
-
     const initials = getInitials(name);
 
-    sidebarUserName.textContent = name;
-
-    sidebarUserRole.textContent = role;
-
-    profileName.textContent = name;
-
-    profileRole.textContent = role;
-
-    userAvatar.textContent = initials;
-
-    profileAvatar.textContent = initials;
-
-    welcomeText.textContent =
-        `Welcome back, ${name}`;
-
+    setText("sidebarUserName", name);
+    setText("sidebarUserRole", role);
+    setText("profileName", name);
+    setText("profileRole", role);
+    setText("userAvatar", initials);
+    setText("profileAvatar", initials);
+    setText("welcomeText", `Welcome back, ${name}`);
 }
-
 
 function setupRoleMenu() {
+    const role = getUserRole().toUpperCase();
 
-    const role = getUserRole();
-
-    const companyMenu =
-        document.querySelectorAll(".super-admin");
-
-    const inventoryMenu =
-        document.querySelectorAll(".inventory-menu");
-
-    const ordersMenu =
-        document.querySelectorAll(".orders-menu");
-
-    const paymentMenu =
-        document.querySelectorAll(".payment-menu");
-
-
-    if (role !== "SUPER_ADMIN") {
-
-        companyMenu.forEach(item => {
-            item.style.display = "none";
-        });
-
-    }
-
+    document.querySelectorAll(".super-admin").forEach(element => {
+        element.style.display =
+            role === "SUPER_ADMIN" ? "" : "none";
+    });
 
     if (role === "WORKER") {
-
-        document
-            .querySelectorAll(".inventory-menu")
-            .forEach(item => {
-
-                const text =
-                    item.textContent.trim();
-
-                if (
-                    !text.includes("Inventory") &&
-                    !text.includes("Products")
-                ) {
-                    item.style.display = "none";
-                }
-
-            });
-
-        paymentMenu.forEach(item => {
-            item.style.display = "none";
+        document.querySelectorAll(".payment-menu").forEach(element => {
+            element.style.display = "none";
         });
 
-    }
-
-
-    if (
-        role === "MANAGER" ||
-        role === "WORKER"
-    ) {
-
-        paymentMenu.forEach(item => {
-            item.style.display = "none";
+        document.querySelectorAll(".orders-menu").forEach(element => {
+            element.style.display = "none";
         });
-
     }
 
+    if (role === "MANAGER" || role === "WORKER") {
+        document.querySelectorAll(".payment-menu").forEach(element => {
+            element.style.display = "none";
+        });
+    }
 }
 
+function logout() {
+    localStorage.removeItem("wareflow_token");
+    localStorage.removeItem("wareflow_user");
+    localStorage.removeItem("wareflow_message");
 
-async function apiRequest(
-    endpoint,
-    options = {}
-) {
+    window.location.replace("index.html");
+}
 
+async function apiRequest(endpoint, options = {}) {
     const headers = {
-        "Content-Type": "application/json",
-        ...(options.headers || {})
+        Accept: "application/json",
+        ...options.headers,
+        Authorization: `Bearer ${token}`
     };
 
-    headers["Authorization"] =
-        `Bearer ${token}`;
+    if (options.body && !headers["Content-Type"]) {
+        headers["Content-Type"] = "application/json";
+    }
 
-    const response = await fetch(
-        `${API_BASE_URL}${endpoint}`,
-        {
-            ...options,
-            headers
-        }
-    );
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers
+    });
 
-    if (response.status === 401 ||
-        response.status === 403) {
+    if (response.status === 401) {
+        logout();
+        throw new Error("Your session has expired. Please log in again.");
+    }
 
-        localStorage.removeItem(
-            "wareflow_token"
-        );
-
-        localStorage.removeItem(
-            "wareflow_user"
-        );
-
-        window.location.href =
-            "index.html";
-
-        return null;
+    if (response.status === 403) {
+        throw new Error("You do not have permission to access this resource.");
     }
 
     return response;
 }
 
+async function fetchList(endpoint) {
+    const response = await apiRequest(endpoint);
 
-async function loadDashboardData() {
-
-    try {
-
-        const productsResponse =
-            await apiRequest(
-                "/api/products"
-            );
-
-        if (productsResponse &&
-            productsResponse.ok) {
-
-            const products =
-                await productsResponse.json();
-
-            if (Array.isArray(products)) {
-
-                document.getElementById(
-                    "totalProducts"
-                ).textContent =
-                    products.length;
-
-            }
-
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
+    if (!response.ok) {
+        throw new Error(`Request failed: ${endpoint} (${response.status})`);
     }
 
+    const data = await response.json();
 
-    try {
-
-        const warehouseResponse =
-            await apiRequest(
-                "/api/warehouses"
-            );
-
-        if (
-            warehouseResponse &&
-            warehouseResponse.ok
-        ) {
-
-            const warehouses =
-                await warehouseResponse.json();
-
-            if (Array.isArray(warehouses)) {
-
-                document.getElementById(
-                    "totalWarehouses"
-                ).textContent =
-                    warehouses.length;
-
-            }
-
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
+    if (Array.isArray(data)) {
+        return data;
     }
 
-
-    try {
-
-        const orderResponse =
-            await apiRequest(
-                "/api/orders"
-            );
-
-        if (
-            orderResponse &&
-            orderResponse.ok
-        ) {
-
-            const orders =
-                await orderResponse.json();
-
-            if (Array.isArray(orders)) {
-
-                document.getElementById(
-                    "totalOrders"
-                ).textContent =
-                    orders.length;
-
-                renderOrders(orders);
-
-            }
-
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
+    if (Array.isArray(data.content)) {
+        return data.content;
     }
 
+    if (Array.isArray(data.data)) {
+        return data.data;
+    }
+
+    return [];
 }
 
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
 
 function renderOrders(orders) {
+    const container = getElement("recentOrders");
 
-    const container =
-        document.getElementById(
-            "recentOrders"
-        );
-
-    if (!orders.length) {
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="4" class="empty">
-                    No orders available
-                </td>
-            </tr>
-        `;
-
+    if (!container) {
         return;
     }
 
-
-    const recent =
-        orders.slice(0, 5);
-
-
-    container.innerHTML =
-        recent.map(order => {
-
-            return `
-                <tr>
-                    <td>
-                        ${order.orderNumber ||
-                          order.id ||
-                          "-"}
-                    </td>
-
-                    <td>
-                        ${order.status || "-"}
-                    </td>
-
-                    <td>
-                        ${order.totalAmount ||
-                          order.total ||
-                          "0"}
-                    </td>
-
-                    <td>
-                        ${order.createdAt
-                            ? new Date(
-                                order.createdAt
-                              ).toLocaleDateString()
-                            : "-"}
-                    </td>
-                </tr>
-            `;
-
-        }).join("");
-
-}
-
-
-function logout() {
-
-    localStorage.removeItem(
-        "wareflow_token"
-    );
-
-    localStorage.removeItem(
-        "wareflow_user"
-    );
-
-    localStorage.removeItem(
-        "wareflow_message"
-    );
-
-    window.location.href =
-        "index.html";
-
-}
-
-
-logoutButton.addEventListener(
-    "click",
-    logout
-);
-
-
-menuButton.addEventListener(
-    "click",
-    () => {
-
-        sidebar.classList.toggle("open");
-
+    if (!orders.length) {
+        container.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty">No orders available</td>
+            </tr>
+        `;
+        return;
     }
-);
 
+    container.innerHTML = orders.slice(0, 5).map(order => {
+        const orderNumber = escapeHTML(order.orderNumber ?? order.id ?? "-");
+        const status = escapeHTML(order.status ?? "-");
+        const amount = Number(order.totalAmount ?? order.total ?? 0);
+        const formattedAmount = Number.isFinite(amount)
+            ? amount.toLocaleString("en-IN", {
+                style: "currency",
+                currency: "INR"
+            })
+            : "—";
+
+        const createdAt = order.createdAt
+            ? new Date(order.createdAt)
+            : null;
+
+        const formattedDate = createdAt &&
+            !Number.isNaN(createdAt.getTime())
+            ? createdAt.toLocaleDateString("en-IN")
+            : "-";
+
+        return `
+            <tr>
+                <td>${orderNumber}</td>
+                <td>${status}</td>
+                <td>${escapeHTML(formattedAmount)}</td>
+                <td>${escapeHTML(formattedDate)}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function updateCount(endpoint, elementId) {
+    try {
+        const items = await fetchList(endpoint);
+        setText(elementId, items.length);
+        return items;
+    } catch (error) {
+        console.error(`Unable to load ${endpoint}:`, error);
+        return null;
+    }
+}
+
+async function loadDashboardData() {
+    const productsPromise = updateCount(
+        "/api/products",
+        "totalProducts"
+    );
+
+    const warehousesPromise = updateCount(
+        "/api/warehouses",
+        "totalWarehouses"
+    );
+
+    const ordersPromise = updateCount(
+        "/api/orders",
+        "totalOrders"
+    );
+
+    const [, , orders] = await Promise.all([
+        productsPromise,
+        warehousesPromise,
+        ordersPromise
+    ]);
+
+    if (orders !== null) {
+        renderOrders(orders);
+    }
+}
+
+const logoutButton = getElement("logoutButton");
+const menuButton = getElement("menuButton");
+const sidebar = getElement("sidebar");
+
+if (logoutButton) {
+    logoutButton.addEventListener("click", logout);
+}
+
+if (menuButton && sidebar) {
+    menuButton.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+    });
+}
 
 setupUser();
-
 setupRoleMenu();
 
-loadDashboardData();
+if (token) {
+    loadDashboardData();
+}

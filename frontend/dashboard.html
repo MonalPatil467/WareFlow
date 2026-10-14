@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WareFlow - Dashboard</title>
     <link rel="stylesheet" href="css/dashboard.css">
 </head>
-
 <body>
 
 <div class="app">
@@ -27,12 +25,10 @@
             </a>
 
             <div id="companyMenu">
-
                 <a href="pages/companies.html" class="nav-item super-admin">
                     <span>🏢</span>
                     <span>Companies</span>
                 </a>
-
             </div>
 
             <div class="menu-title">Inventory</div>
@@ -74,6 +70,18 @@
                 <span>Payments</span>
             </a>
 
+            <div class="menu-title">Management</div>
+
+            <a href="pages/reports.html" class="nav-item">
+                <span>📈</span>
+                <span>Reports & Analytics</span>
+            </a>
+
+            <a href="pages/settings.html" class="nav-item">
+                <span>⚙️</span>
+                <span>Settings & Profile</span>
+            </a>
+
         </nav>
 
         <div class="sidebar-bottom">
@@ -85,20 +93,13 @@
                 </div>
 
                 <div class="user-mini-info">
-
-                    <strong id="sidebarUserName">
-                        User
-                    </strong>
-
-                    <span id="sidebarUserRole">
-                        USER
-                    </span>
-
+                    <strong id="sidebarUserName">User</strong>
+                    <span id="sidebarUserRole">USER</span>
                 </div>
 
             </div>
 
-            <button id="logoutButton" class="logout-button">
+            <button id="logoutButton" class="logout-button" type="button">
                 <span>↪</span>
                 Logout
             </button>
@@ -107,25 +108,22 @@
 
     </aside>
 
-
     <main class="main">
 
         <header class="topbar">
 
-            <button id="menuButton" class="menu-button">
+            <button id="menuButton" class="menu-button" type="button">
                 ☰
             </button>
 
             <div class="page-title">
                 <h1>Dashboard</h1>
-                <p id="welcomeText">
-                    Welcome back
-                </p>
+                <p id="welcomeText">Welcome back</p>
             </div>
 
             <div class="topbar-right">
 
-                <button class="notification-button">
+                <button class="notification-button" type="button">
                     🔔
                     <span class="notification-dot"></span>
                 </button>
@@ -137,15 +135,8 @@
                     </div>
 
                     <div class="profile-info">
-
-                        <strong id="profileName">
-                            User
-                        </strong>
-
-                        <span id="profileRole">
-                            USER
-                        </span>
-
+                        <strong id="profileName">User</strong>
+                        <span id="profileRole">USER</span>
                     </div>
 
                 </div>
@@ -154,155 +145,110 @@
 
         </header>
 
-
         <section class="content">
 
             <div class="stats-grid">
 
                 <div class="stat-card">
-
-                    <div class="stat-icon blue">
-                        📦
-                    </div>
-
+                    <div class="stat-icon blue">📦</div>
                     <div>
                         <span>Total Products</span>
                         <strong id="totalProducts">0</strong>
                     </div>
-
                 </div>
 
-
                 <div class="stat-card">
-
-                    <div class="stat-icon green">
-                        🏭
-                    </div>
-
+                    <div class="stat-icon green">🏭</div>
                     <div>
                         <span>Warehouses</span>
                         <strong id="totalWarehouses">0</strong>
                     </div>
-
                 </div>
 
-
                 <div class="stat-card">
-
-                    <div class="stat-icon orange">
-                        🛒
-                    </div>
-
+                    <div class="stat-icon orange">🛒</div>
                     <div>
                         <span>Total Orders</span>
                         <strong id="totalOrders">0</strong>
                     </div>
-
                 </div>
 
-
                 <div class="stat-card">
-
-                    <div class="stat-icon red">
-                        ⚠
-                    </div>
-
+                    <div class="stat-icon red">⚠</div>
                     <div>
                         <span>Low Stock</span>
                         <strong id="lowStock">0</strong>
                     </div>
-
                 </div>
 
             </div>
-
 
             <div class="dashboard-grid">
 
                 <div class="card">
 
                     <div class="card-header">
-
                         <div>
                             <h2>Recent Orders</h2>
                             <p>Latest orders from your company</p>
                         </div>
 
-                        <a href="pages/orders.html">
-                            View all
-                        </a>
-
+                        <a href="pages/orders.html">View all</a>
                     </div>
 
                     <div class="table-wrapper">
 
                         <table>
-
                             <thead>
-
                             <tr>
                                 <th>Order</th>
                                 <th>Status</th>
                                 <th>Total</th>
                                 <th>Date</th>
                             </tr>
-
                             </thead>
 
                             <tbody id="recentOrders">
-
                             <tr>
                                 <td colspan="4" class="empty">
                                     No orders available
                                 </td>
                             </tr>
-
                             </tbody>
-
                         </table>
 
                     </div>
 
                 </div>
 
-
                 <div class="card">
 
                     <div class="card-header">
-
                         <div>
                             <h2>Low Stock</h2>
                             <p>Products that need attention</p>
                         </div>
 
-                        <a href="pages/inventory.html">
-                            View all
-                        </a>
-
+                        <a href="pages/inventory.html">View all</a>
                     </div>
 
                     <div id="lowStockList" class="stock-list">
-
                         <div class="empty">
                             No low-stock products
                         </div>
-
                     </div>
 
                 </div>
 
             </div>
 
-
             <div class="card quick-actions">
 
                 <div class="card-header">
-
                     <div>
                         <h2>Quick Actions</h2>
                         <p>Frequently used actions</p>
                     </div>
-
                 </div>
 
                 <div class="actions">
@@ -329,6 +275,18 @@
                         <span>🚚</span>
                         <strong>Add Supplier</strong>
                         <small>Create a supplier</small>
+                    </a>
+
+                    <a href="pages/reports.html" class="action">
+                        <span>📈</span>
+                        <strong>View Reports</strong>
+                        <small>Review business analytics</small>
+                    </a>
+
+                    <a href="pages/settings.html" class="action">
+                        <span>⚙️</span>
+                        <strong>Settings & Profile</strong>
+                        <small>Manage your preferences</small>
                     </a>
 
                 </div>
