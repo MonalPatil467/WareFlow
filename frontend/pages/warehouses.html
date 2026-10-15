@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WareFlow | Warehouses</title>
+    <link rel="stylesheet" href="../css/warehouses.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Ware<span>Flow</span></div>
+        <p class="sidebar-label">MAIN MENU</p>
+        <nav>
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="products.html">Products</a>
+            <a href="categories.html">Categories</a>
+            <a href="suppliers.html">Suppliers</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="warehouses.html" class="active">Warehouses</a>
+        </nav>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Warehouse Management</h1>
+                <p>Manage your storage locations and warehouse details.</p>
+            </div>
+            <button id="addWarehouseBtn" class="primary-btn">+ Add Warehouse</button>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span>Total Warehouses</span>
+                <h2 id="totalWarehouses">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Active Warehouses</span>
+                <h2 id="activeWarehouses">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Inactive Warehouses</span>
+                <h2 id="inactiveWarehouses">0</h2>
+            </div>
+        </section>
+
+        <section class="table-card">
+            <div class="table-toolbar">
+                <input id="searchInput" type="search" placeholder="Search warehouse, city, or postal code">
+                <select id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Warehouse</th>
+                        <th>Location</th>
+                        <th>Address</th>
+                        <th>Postal Code</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="warehouseTableBody">
+                    <tr>
+                        <td colspan="7" class="empty-state">Loading warehouses...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <span id="pageInfo">Page 1</span>
+                <div>
+                    <button id="prevBtn" class="secondary-btn">Previous</button>
+                    <button id="nextBtn" class="secondary-btn">Next</button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="warehouseModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">Add Warehouse</h2>
+                <p>Enter the warehouse details below.</p>
+            </div>
+            <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+
+        <form id="warehouseForm">
+            <input type="hidden" id="warehouseId">
+
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="warehouseName">Warehouse Name</label>
+                    <input id="warehouseName" type="text" required maxlength="150">
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="address">Address</label>
+                    <input id="address" type="text" required maxlength="255">
+                </div>
+
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input id="city" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="state">State</label>
+                    <input id="state" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <input id="country" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="postalCode">Postal Code</label>
+                    <input id="postalCode" type="text" required>
+                </div>
+
+                <div class="form-group full-width" id="statusGroup" hidden>
+                    <label for="active">Status</label>
+                    <select id="active">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
+                <button type="submit" id="saveBtn" class="primary-btn">Save Warehouse</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../js/warehouses.js"></script>
+</body>
+</html>

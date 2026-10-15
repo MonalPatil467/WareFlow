@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories | WareFlow</title>
+    <link rel="stylesheet" href="../css/categories.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="brand-icon">W</div>
+            <div>
+                <h2>WareFlow</h2>
+                <span>Inventory Management</span>
+            </div>
+        </div>
+
+        <div class="nav-label">WORKSPACE</div>
+        <nav class="navigation">
+            <a href="../dashboard.html"><span>▦</span> Dashboard</a>
+            <a href="products.html"><span>▤</span> Products</a>
+            <a href="categories.html" class="active"><span>▦</span> Categories</a>
+            <a href="suppliers.html"><span>♙</span> Suppliers</a>
+            <a href="inventory.html"><span>▣</span> Inventory</a>
+            <a href="warehouses.html"><span>⌂</span> Warehouses</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile">
+                <div class="avatar" id="userAvatar">W</div>
+                <div class="profile-info">
+                    <strong id="userName">Administrator</strong>
+                    <span>Workspace user</span>
+                </div>
+            </div>
+            <button class="logout-button" id="logoutButton">↪ Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <button class="menu-button" id="menuButton">☰</button>
+            <div>
+                <p class="breadcrumb">Workspace / Categories</p>
+                <h1>Categories</h1>
+            </div>
+            <button class="primary-button" id="addCategoryButton">＋ Add Category</button>
+        </header>
+
+        <section class="welcome-section">
+            <div>
+                <h2>Category Management</h2>
+                <p>Organize your products into clear categories.</p>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+            <article class="stat-card">
+                <div class="stat-heading">Total Categories</div>
+                <div class="stat-value" id="totalCategories">0</div>
+                <div class="stat-description">All registered categories</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-heading">Active Categories</div>
+                <div class="stat-value" id="activeCategories">0</div>
+                <div class="stat-description">Currently active</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-heading">Inactive Categories</div>
+                <div class="stat-value" id="inactiveCategories">0</div>
+                <div class="stat-description">Currently inactive</div>
+            </article>
+        </section>
+
+        <section class="content-card">
+            <div class="content-heading">
+                <div>
+                    <h2>All Categories</h2>
+                    <p>View and manage your product categories.</p>
+                </div>
+                <button class="secondary-button" id="refreshButton">↻ Refresh</button>
+            </div>
+
+            <div class="filters">
+                <div class="search-box">
+                    <span>⌕</span>
+                    <input type="search" id="searchInput" placeholder="Search categories...">
+                </div>
+
+                <select id="statusFilter" aria-label="Filter by status">
+                    <option value="all">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+
+                <select id="pageSize" aria-label="Rows per page">
+                    <option value="5">5 per page</option>
+                    <option value="10" selected>10 per page</option>
+                    <option value="20">20 per page</option>
+                </select>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                    <tr>
+                        <td colspan="5" class="empty-state">Loading categories...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-footer">
+                <span id="paginationInfo">Showing 0 categories</span>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="modal-overlay" id="categoryModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">Add Category</h2>
+                <p id="modalSubtitle">Enter the category details below.</p>
+            </div>
+            <button class="close-button" id="closeModalButton">×</button>
+        </div>
+
+        <form id="categoryForm">
+            <input type="hidden" id="categoryId">
+
+            <div class="form-group">
+                <label for="categoryName">Category Name <span>*</span></label>
+                <input type="text" id="categoryName" maxlength="100" required placeholder="e.g. Electronics">
+            </div>
+
+            <div class="form-group">
+                <label for="categoryDescription">Description</label>
+                <textarea id="categoryDescription" rows="4" maxlength="500" placeholder="Describe this category"></textarea>
+            </div>
+
+            <div class="form-group" id="activeGroup" hidden>
+                <label for="categoryActive">Status</label>
+                <select id="categoryActive">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="secondary-button" id="cancelButton">Cancel</button>
+                <button type="submit" class="primary-button" id="saveButton">Save Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../js/categories.js"></script>
+</body>
+</html>

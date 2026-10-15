@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WareFlow | Payments</title>
+    <link rel="stylesheet" href="../css/payments.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Ware<span>Flow</span></div>
+        <p class="sidebar-label">MAIN MENU</p>
+        <nav>
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="products.html">Products</a>
+            <a href="categories.html">Categories</a>
+            <a href="suppliers.html">Suppliers</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="warehouses.html">Warehouses</a>
+            <a href="orders.html">Orders</a>
+            <a href="payments.html" class="active">Payments</a>
+        </nav>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Payments Management</h1>
+                <p>Track order payments and manage payment statuses.</p>
+            </div>
+            <button id="createPaymentBtn" class="primary-btn">+ Create Payment</button>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span>Total Payments</span>
+                <h2 id="totalPayments">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Successful Payments</span>
+                <h2 id="successfulPayments">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Pending Payments</span>
+                <h2 id="pendingPayments">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Total Amount</span>
+                <h2 id="totalAmount">₹0</h2>
+            </div>
+        </section>
+
+        <section class="table-card">
+            <div class="table-toolbar">
+                <input id="searchInput" type="search" placeholder="Search payment ID, order ID, or customer ID">
+                <select id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="SUCCESS">Success</option>
+                    <option value="FAILED">Failed</option>
+                    <option value="REFUNDED">Refunded</option>
+                </select>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Order ID</th>
+                        <th>Customer ID</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                    <tr>
+                        <td colspan="8" class="empty-state">Loading payments...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <span id="pageInfo">Page 1</span>
+                <div>
+                    <button id="prevBtn" class="secondary-btn">Previous</button>
+                    <button id="nextBtn" class="secondary-btn">Next</button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="paymentModal" class="modal">
+    <div class="modal-content compact-modal">
+        <div class="modal-header">
+            <div>
+                <h2>Create Payment</h2>
+                <p>Create a payment record for an existing order.</p>
+            </div>
+            <button id="closePaymentModal" class="close-btn">&times;</button>
+        </div>
+
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="orderId">Order ID</label>
+                <input id="orderId" type="number" min="1" required>
+            </div>
+
+            <p class="form-hint">The backend retrieves the order amount and creates the payment with PENDING status.</p>
+
+            <div class="form-actions">
+                <button type="button" id="cancelPaymentBtn" class="secondary-btn">Cancel</button>
+                <button type="submit" id="savePaymentBtn" class="primary-btn">Create Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="detailsModal" class="modal">
+    <div class="modal-content compact-modal">
+        <div class="modal-header">
+            <div>
+                <h2>Payment Details</h2>
+                <p id="detailsSubtitle">Payment information</p>
+            </div>
+            <button id="closeDetailsModal" class="close-btn">&times;</button>
+        </div>
+        <div id="paymentDetails"></div>
+    </div>
+</div>
+
+<div id="statusModal" class="modal">
+    <div class="modal-content compact-modal">
+        <div class="modal-header">
+            <div>
+                <h2>Update Payment Status</h2>
+                <p id="statusSubtitle">Select a payment status.</p>
+            </div>
+            <button id="closeStatusModal" class="close-btn">&times;</button>
+        </div>
+
+        <form id="statusForm">
+            <input id="statusPaymentId" type="hidden">
+
+            <div class="form-group">
+                <label for="paymentStatus">Payment Status</label>
+                <select id="paymentStatus" required>
+                    <option value="PENDING">Pending</option>
+                    <option value="SUCCESS">Success</option>
+                    <option value="FAILED">Failed</option>
+                    <option value="REFUNDED">Refunded</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="cancelStatusBtn" class="secondary-btn">Cancel</button>
+                <button type="submit" id="saveStatusBtn" class="primary-btn">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../js/payments.js"></script>
+</body>
+</html>
