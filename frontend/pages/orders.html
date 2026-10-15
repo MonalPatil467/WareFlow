@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WareFlow | Orders</title>
+    <link rel="stylesheet" href="../css/orders.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Ware<span>Flow</span></div>
+        <p class="sidebar-label">MAIN MENU</p>
+        <nav>
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="products.html">Products</a>
+            <a href="categories.html">Categories</a>
+            <a href="suppliers.html">Suppliers</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="warehouses.html">Warehouses</a>
+            <a href="orders.html" class="active">Orders</a>
+        </nav>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Orders Management</h1>
+                <p>Manage customer orders and track order progress.</p>
+            </div>
+            <button id="createOrderBtn" class="primary-btn">+ Create Order</button>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span>Total Orders</span>
+                <h2 id="totalOrders">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Pending Orders</span>
+                <h2 id="pendingOrders">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Processing Orders</span>
+                <h2 id="processingOrders">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Delivered Orders</span>
+                <h2 id="deliveredOrders">0</h2>
+            </div>
+        </section>
+
+        <section class="table-card">
+            <div class="table-toolbar">
+                <input id="searchInput" type="search" placeholder="Search order ID, customer ID, or city">
+                <select id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="CONFIRMED">Confirmed</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="SHIPPED">Shipped</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Order Date</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                    <tr>
+                        <td colspan="8" class="empty-state">Loading orders...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <span id="pageInfo">Page 1</span>
+                <div>
+                    <button id="prevBtn" class="secondary-btn">Previous</button>
+                    <button id="nextBtn" class="secondary-btn">Next</button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="orderModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2>Create Order</h2>
+                <p>Add products and enter the shipping address.</p>
+            </div>
+            <button class="close-btn" id="closeOrderModal">&times;</button>
+        </div>
+
+        <form id="orderForm">
+            <div class="form-section">
+                <div class="section-heading">
+                    <h3>Order Items</h3>
+                    <button type="button" id="addItemBtn" class="secondary-btn">+ Add Product</button>
+                </div>
+                <div id="orderItems"></div>
+                <div class="order-total">
+                    <span>Estimated Total</span>
+                    <strong id="estimatedTotal">₹0.00</strong>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Shipping Address</h3>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="shippingAddress">Address</label>
+                        <input id="shippingAddress" required maxlength="255">
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input id="city" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input id="state" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input id="country" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="postalCode">Postal Code</label>
+                        <input id="postalCode" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="cancelOrderBtn" class="secondary-btn">Cancel</button>
+                <button type="submit" id="submitOrderBtn" class="primary-btn">Place Order</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="detailsModal" class="modal">
+    <div class="modal-content details-content">
+        <div class="modal-header">
+            <div>
+                <h2 id="detailsTitle">Order Details</h2>
+                <p id="detailsSubtitle">Order information</p>
+            </div>
+            <button class="close-btn" id="closeDetailsModal">&times;</button>
+        </div>
+        <div id="orderDetails"></div>
+    </div>
+</div>
+
+<div id="statusModal" class="modal">
+    <div class="modal-content status-content">
+        <div class="modal-header">
+            <div>
+                <h2>Update Order Status</h2>
+                <p id="statusOrderLabel">Select the new status.</p>
+            </div>
+            <button class="close-btn" id="closeStatusModal">&times;</button>
+        </div>
+        <form id="statusForm">
+            <input type="hidden" id="statusOrderId">
+            <div class="form-group">
+                <label for="newOrderStatus">Order Status</label>
+                <select id="newOrderStatus" required>
+                    <option value="PENDING">Pending</option>
+                    <option value="CONFIRMED">Confirmed</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="SHIPPED">Shipped</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="cancelStatusBtn" class="secondary-btn">Cancel</button>
+                <button type="submit" id="saveStatusBtn" class="primary-btn">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../js/orders.js"></script>
+</body>
+</html>
