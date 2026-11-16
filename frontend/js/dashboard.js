@@ -1,275 +1,425 @@
-const API_BASE_URL = "http://localhost:8090";
+const API_BASE_URL = "http://localhost:8090";   // API gateway
 
 const token = localStorage.getItem("wareflow_token");
 
-let user = null;
-
-try {
-    user = JSON.parse(localStorage.getItem("wareflow_user") || "null");
-} catch {
-    user = null;
-}
-
 if (!token) {
-    window.location.replace("index.html");
+    window.location.href = "index.html";
 }
 
-function getElement(id) {
-    return document.getElementById(id);
-}
+const user = JSON.parse(
+    localStorage.getItem("wareflow_user") || "null"
+);
 
-function setText(id, value) {
-    const element = getElement(id);
+const sidebarUserName =
+    document.getElementById("sidebarUserName");
 
-    if (element) {
-        element.textContent = value ?? "";
-    }
-}
+const sidebarUserRole =
+    document.getElementById("sidebarUserRole");
+
+const profileName =
+    document.getElementById("profileName");
+
+const profileRole =
+    document.getElementById("profileRole");
+
+const userAvatar =
+    document.getElementById("userAvatar");
+
+const profileAvatar =
+    document.getElementById("profileAvatar");
+
+const welcomeText =
+    document.getElementById("welcomeText");
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+const menuButton =
+    document.getElementById("menuButton");
+
+const sidebar =
+    document.getElementById("sidebar");
+
 
 function getUserName() {
-    return user?.name ||
-        user?.fullName ||
-        user?.firstName ||
-        user?.username ||
-        user?.email ||
-        "User";
+
+    if (!user) {
+        return "User";
+    }
+
+    return (
+        user.name ||
+        user.fullName ||
+        user.username ||
+        user.email ||
+        "User"
+    );
+
 }
+
 
 function getUserRole() {
-    const role = user?.role || user?.roles?.[0] || "";
 
-    return typeof role === "string" ? role : "";
+    if (!user) {
+        return "";
+    }
+
+    return (
+        user.role ||
+        user.roles?.[0] ||
+        ""
+    );
+
 }
 
-function getInitials(name) {
-    const words = String(name || "User")
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
 
-    if (words.length === 0) {
+function getInitials(name) {
+
+    if (!name) {
         return "U";
     }
+
+    const words = name.trim().split(" ");
 
     if (words.length === 1) {
         return words[0].substring(0, 2).toUpperCase();
     }
 
-    return (words[0][0] + words[words.length - 1][0])
-        .toUpperCase();
+    return (
+        words[0][0] +
+        words[words.length - 1][0]
+    ).toUpperCase();
+
 }
+
 
 function setupUser() {
+
     const name = getUserName();
+
     const role = getUserRole();
+
     const initials = getInitials(name);
 
-    setText("sidebarUserName", name);
-    setText("sidebarUserRole", role);
-    setText("profileName", name);
-    setText("profileRole", role);
-    setText("userAvatar", initials);
-    setText("profileAvatar", initials);
-    setText("welcomeText", `Welcome back, ${name}`);
+    sidebarUserName.textContent = name;
+
+    sidebarUserRole.textContent = role;
+
+    profileName.textContent = name;
+
+    profileRole.textContent = role;
+
+    userAvatar.textContent = initials;
+
+    profileAvatar.textContent = initials;
+
+    welcomeText.textContent =
+        `Welcome back, ${name}`;
+
 }
+
 
 function setupRoleMenu() {
-    const role = getUserRole().toUpperCase();
 
-    document.querySelectorAll(".super-admin").forEach(element => {
-        element.style.display =
-            role === "SUPER_ADMIN" ? "" : "none";
-    });
+    const role = getUserRole()
+        .replace(/^ROLE_/, "")
+        .toUpperCase();
 
-    if (role === "WORKER") {
-        document.querySelectorAll(".payment-menu").forEach(element => {
-            element.style.display = "none";
+    const hide = (selector, predicate) => {
+
+        document.querySelectorAll(selector).forEach(item => {
+
+            if (!predicate || predicate(item)) {
+                item.style.display = "none";
+            }
+
         });
 
-        document.querySelectorAll(".orders-menu").forEach(element => {
-            element.style.display = "none";
-        });
-    }
-
-    if (role === "MANAGER" || role === "WORKER") {
-        document.querySelectorAll(".payment-menu").forEach(element => {
-            element.style.display = "none";
-        });
-    }
-}
-
-function logout() {
-    localStorage.removeItem("wareflow_token");
-    localStorage.removeItem("wareflow_user");
-    localStorage.removeItem("wareflow_message");
-
-    window.location.replace("index.html");
-}
-
-async function apiRequest(endpoint, options = {}) {
-    const headers = {
-        Accept: "application/json",
-        ...options.headers,
-        Authorization: `Bearer ${token}`
     };
 
-    if (options.body && !headers["Content-Type"]) {
-        headers["Content-Type"] = "application/json";
+    // Companies: super admin only
+    if (role !== "SUPER_ADMIN") {
+        hide(".super-admin");
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers
-    });
+    // Add User: super admin and company admin only
+    if (role !== "SUPER_ADMIN" && role !== "COMPANY_ADMIN") {
+        hide(".admin-only");
+    }
+
+    // The platform super admin owns no warehouse data
+    if (role === "SUPER_ADMIN") {
+        hide(".inventory-menu");
+        hide(".orders-menu");
+        hide(".payment-menu");
+    }
+
+    // Workers: only Products + Inventory (read), Orders; no Payments / Reports
+    if (role === "WORKER") {
+
+        hide(".inventory-menu", item => {
+
+            const text = item.textContent.trim();
+
+            return !text.includes("Inventory") &&
+                !text.includes("Products");
+
+        });
+
+        hide(".payment-menu");
+
+        hide("a[href='pages/reports.html']");
+
+    }
+
+}
+
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+    };
+
+    headers["Authorization"] =
+        `Bearer ${token}`;
+
+    const response = await fetch(
+        `${API_BASE_URL}${endpoint}`,
+        {
+            ...options,
+            headers
+        }
+    );
 
     if (response.status === 401) {
-        logout();
-        throw new Error("Your session has expired. Please log in again.");
-    }
 
-    if (response.status === 403) {
-        throw new Error("You do not have permission to access this resource.");
+        localStorage.removeItem(
+            "wareflow_token"
+        );
+
+        localStorage.removeItem(
+            "wareflow_user"
+        );
+
+        window.location.href =
+            "index.html";
+
+        return null;
     }
 
     return response;
 }
 
-async function fetchList(endpoint) {
-    const response = await apiRequest(endpoint);
-
-    if (!response.ok) {
-        throw new Error(`Request failed: ${endpoint} (${response.status})`);
-    }
-
-    const data = await response.json();
-
-    if (Array.isArray(data)) {
-        return data;
-    }
-
-    if (Array.isArray(data.content)) {
-        return data.content;
-    }
-
-    if (Array.isArray(data.data)) {
-        return data.data;
-    }
-
-    return [];
-}
-
-function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[character]);
-}
-
-function renderOrders(orders) {
-    const container = getElement("recentOrders");
-
-    if (!container) {
-        return;
-    }
-
-    if (!orders.length) {
-        container.innerHTML = `
-            <tr>
-                <td colspan="4" class="empty">No orders available</td>
-            </tr>
-        `;
-        return;
-    }
-
-    container.innerHTML = orders.slice(0, 5).map(order => {
-        const orderNumber = escapeHTML(order.orderNumber ?? order.id ?? "-");
-        const status = escapeHTML(order.status ?? "-");
-        const amount = Number(order.totalAmount ?? order.total ?? 0);
-        const formattedAmount = Number.isFinite(amount)
-            ? amount.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR"
-            })
-            : "—";
-
-        const createdAt = order.createdAt
-            ? new Date(order.createdAt)
-            : null;
-
-        const formattedDate = createdAt &&
-            !Number.isNaN(createdAt.getTime())
-            ? createdAt.toLocaleDateString("en-IN")
-            : "-";
-
-        return `
-            <tr>
-                <td>${orderNumber}</td>
-                <td>${status}</td>
-                <td>${escapeHTML(formattedAmount)}</td>
-                <td>${escapeHTML(formattedDate)}</td>
-            </tr>
-        `;
-    }).join("");
-}
-
-async function updateCount(endpoint, elementId) {
-    try {
-        const items = await fetchList(endpoint);
-        setText(elementId, items.length);
-        return items;
-    } catch (error) {
-        console.error(`Unable to load ${endpoint}:`, error);
-        return null;
-    }
-}
 
 async function loadDashboardData() {
-    const productsPromise = updateCount(
-        "/api/products",
-        "totalProducts"
-    );
 
-    const warehousesPromise = updateCount(
-        "/api/warehouses",
-        "totalWarehouses"
-    );
+    try {
 
-    const ordersPromise = updateCount(
-        "/api/orders",
-        "totalOrders"
-    );
+        const productsResponse =
+            await apiRequest(
+                "/inventoryservice/api/products"
+            );
 
-    const [, , orders] = await Promise.all([
-        productsPromise,
-        warehousesPromise,
-        ordersPromise
-    ]);
+        if (productsResponse &&
+            productsResponse.ok) {
 
-    if (orders !== null) {
-        renderOrders(orders);
+            const products =
+                await productsResponse.json();
+
+            if (Array.isArray(products)) {
+
+                document.getElementById(
+                    "totalProducts"
+                ).textContent =
+                    products.length;
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
     }
+
+
+    try {
+
+        const warehouseResponse =
+            await apiRequest(
+                "/inventoryservice/api/warehouses"
+            );
+
+        if (
+            warehouseResponse &&
+            warehouseResponse.ok
+        ) {
+
+            const warehouses =
+                await warehouseResponse.json();
+
+            if (Array.isArray(warehouses)) {
+
+                document.getElementById(
+                    "totalWarehouses"
+                ).textContent =
+                    warehouses.length;
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+
+    try {
+
+        const orderResponse =
+            await apiRequest(
+                ["COMPANY_ADMIN", "MANAGER"].includes(getUserRole())
+                    ? "/orderservice/api/orders"
+                    : "/orderservice/api/orders/my-orders"
+            );
+
+        if (
+            orderResponse &&
+            orderResponse.ok
+        ) {
+
+            const orders =
+                await orderResponse.json();
+
+            if (Array.isArray(orders)) {
+
+                document.getElementById(
+                    "totalOrders"
+                ).textContent =
+                    orders.length;
+
+                renderOrders(orders);
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
 }
 
-const logoutButton = getElement("logoutButton");
-const menuButton = getElement("menuButton");
-const sidebar = getElement("sidebar");
 
-if (logoutButton) {
-    logoutButton.addEventListener("click", logout);
+function renderOrders(orders) {
+
+    const container =
+        document.getElementById(
+            "recentOrders"
+        );
+
+    if (!orders.length) {
+
+        container.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty">
+                    No orders available
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    const recent =
+        orders.slice(0, 5);
+
+
+    container.innerHTML =
+        recent.map(order => {
+
+            return `
+                <tr>
+                    <td>
+                        ${order.orderNumber ||
+                          order.id ||
+                          "-"}
+                    </td>
+
+                    <td>
+                        ${order.status || "-"}
+                    </td>
+
+                    <td>
+                        ${order.totalAmount ||
+                          order.total ||
+                          "0"}
+                    </td>
+
+                    <td>
+                        ${order.createdAt
+                            ? new Date(
+                                order.createdAt
+                              ).toLocaleDateString()
+                            : "-"}
+                    </td>
+                </tr>
+            `;
+
+        }).join("");
+
 }
 
-if (menuButton && sidebar) {
-    menuButton.addEventListener("click", () => {
+
+function logout() {
+
+    localStorage.removeItem(
+        "wareflow_token"
+    );
+
+    localStorage.removeItem(
+        "wareflow_user"
+    );
+
+    localStorage.removeItem(
+        "wareflow_message"
+    );
+
+    window.location.href =
+        "index.html";
+
+}
+
+
+logoutButton.addEventListener(
+    "click",
+    logout
+);
+
+
+menuButton.addEventListener(
+    "click",
+    () => {
+
         sidebar.classList.toggle("open");
-    });
-}
+
+    }
+);
+
 
 setupUser();
+
 setupRoleMenu();
 
-if (token) {
-    loadDashboardData();
-}
+loadDashboardData();

@@ -1,4 +1,3 @@
-
 const API_BASE_URL = "http://localhost:8090";
 const INVENTORY_API = "/inventoryservice/api/inventory";
 const PRODUCT_API = "/inventoryservice/api/products";
@@ -32,7 +31,6 @@ function getResponseData(data) {
     if (Array.isArray(data)) return data;
     if (Array.isArray(data?.data)) return data.data;
     if (Array.isArray(data?.content)) return data.content;
-    if (Array.isArray(data?.items)) return data.items;
     return [];
 }
 
@@ -46,7 +44,7 @@ async function apiRequest(endpoint, options = {}) {
         }
     });
 
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
         localStorage.removeItem("wareflow_token");
         localStorage.removeItem("wareflow_user");
         window.location.href = "../index.html";
@@ -88,18 +86,12 @@ function escapeHTML(value) {
 }
 
 function showToast(message, type = "success") {
-    let container = document.getElementById("toastContainer");
-
-    if (!container) {
-        container = document.createElement("div");
-        container.id = "toastContainer";
-        container.className = "toast-container";
-        document.body.appendChild(container);
-    }
-
+    const container = document.getElementById("toastContainer");
     const toast = document.createElement("div");
+
     toast.className = `toast ${type}`;
     toast.textContent = message;
+
     container.appendChild(toast);
 
     setTimeout(() => toast.remove(), 3500);
@@ -112,15 +104,13 @@ function updateUserInfo() {
 
     try {
         const user = JSON.parse(storedUser);
-        const name = user.name || user.username || user.email || "Administrator";
-        const nameElement = document.getElementById("userName");
-        const avatarElement = document.getElementById("userAvatar");
+        const name = user.name || user.username || user.phone || "Administrator";
 
-        if (nameElement) nameElement.textContent = name;
-        if (avatarElement) avatarElement.textContent = name.charAt(0).toUpperCase();
+        document.getElementById("userName").textContent = name;
+        document.getElementById("userAvatar").textContent =
+            name.charAt(0).toUpperCase();
     } catch {
-        const nameElement = document.getElementById("userName");
-        if (nameElement) nameElement.textContent = "Administrator";
+        document.getElementById("userName").textContent = "Administrator";
     }
 }
 
@@ -134,20 +124,25 @@ async function loadReferenceData() {
         products = getResponseData(productResult.value);
         populateProducts();
     } else {
-        showToast(`Could not load products: ${productResult.reason.message}`, "error");
+        showToast(
+            `Could not load products: ${productResult.reason.message}`,
+            "error"
+        );
     }
 
     if (warehouseResult.status === "fulfilled") {
         warehouses = getResponseData(warehouseResult.value);
         populateWarehouses();
     } else {
-        showToast(`Could not load warehouses: ${warehouseResult.reason.message}`, "error");
+        showToast(
+            `Could not load warehouses: ${warehouseResult.reason.message}`,
+            "error"
+        );
     }
 }
 
 function populateProducts() {
     const select = document.getElementById("productId");
-    if (!select) return;
 
     select.innerHTML = '<option value="">Select product</option>';
 
@@ -155,15 +150,17 @@ function populateProducts() {
         .filter(product => product.active !== false)
         .forEach(product => {
             const option = document.createElement("option");
+
             option.value = product.id;
-            option.textContent = `${product.productName || product.name || "Product"} (${product.sku || "No SKU"})`;
+            option.textContent =
+                `${product.productName} (${product.sku || "No SKU"})`;
+
             select.appendChild(option);
         });
 }
 
 function populateWarehouses() {
     const select = document.getElementById("warehouseId");
-    if (!select) return;
 
     select.innerHTML = '<option value="">Select warehouse</option>';
 
@@ -171,15 +168,16 @@ function populateWarehouses() {
         .filter(warehouse => warehouse.active !== false)
         .forEach(warehouse => {
             const option = document.createElement("option");
+
             option.value = warehouse.id;
-            option.textContent = `${warehouse.warehouseName || warehouse.name || "Warehouse"} - ${warehouse.city || ""}`;
+            option.textContent =
+                `${warehouse.warehouseName} - ${warehouse.city || ""}`;
+
             select.appendChild(option);
         });
 }
 
 async function loadInventory() {
-    if (!tableBody) return;
-
     tableBody.innerHTML = `
         <tr>
             <td colspan="7" class="empty-state">Loading inventory...</td>
@@ -188,6 +186,7 @@ async function loadInventory() {
 
     try {
         const response = await apiRequest(INVENTORY_API);
+
         inventoryRecords = getResponseData(response);
 
         updateStats();
@@ -195,7 +194,9 @@ async function loadInventory() {
     } catch (error) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="empty-state">${escapeHTML(error.message)}</td>
+                <td colspan="7" class="empty-state">
+                    ${escapeHTML(error.message)}
+                </td>
             </tr>
         `;
 
@@ -209,23 +210,35 @@ function isOutOfStock(record) {
 
 function isLowStock(record) {
     return !isOutOfStock(record) &&
-        Number(record.quantity) <= Number(record.reorderLevel ?? 0);
+        Number(record.quantity) <= Number(record.reorderLevel);
 }
 
 function getStockStatus(record) {
     if (record.active === false) {
-        return { label: "Inactive", className: "inactive" };
+        return {
+            label: "Inactive",
+            className: "inactive"
+        };
     }
 
     if (isOutOfStock(record)) {
-        return { label: "Out of Stock", className: "out" };
+        return {
+            label: "Out of Stock",
+            className: "out"
+        };
     }
 
     if (isLowStock(record)) {
-        return { label: "Low Stock", className: "low" };
+        return {
+            label: "Low Stock",
+            className: "low"
+        };
     }
 
-    return { label: "Healthy", className: "healthy" };
+    return {
+        label: "Healthy",
+        className: "healthy"
+    };
 }
 
 function updateStats() {
@@ -236,13 +249,12 @@ function updateStats() {
     const lowStock = activeRecords.filter(isLowStock).length;
     const outOfStock = activeRecords.filter(isOutOfStock).length;
 
-    const totalElement = document.getElementById("totalInventory");
-    const lowElement = document.getElementById("lowStockCount");
-    const outElement = document.getElementById("outOfStockCount");
+    document.getElementById("totalInventory").textContent =
+        inventoryRecords.length;
 
-    if (totalElement) totalElement.textContent = inventoryRecords.length;
-    if (lowElement) lowElement.textContent = lowStock;
-    if (outElement) outElement.textContent = outOfStock;
+    document.getElementById("lowStockCount").textContent = lowStock;
+
+    document.getElementById("outOfStockCount").textContent = outOfStock;
 }
 
 function getFilteredInventory() {
@@ -254,6 +266,7 @@ function getFilteredInventory() {
         ].join(" ").toLowerCase();
 
         const matchesSearch = searchable.includes(searchTerm.toLowerCase());
+
         let matchesStock = true;
 
         if (stockFilter === "out") {
@@ -272,15 +285,18 @@ function getFilteredInventory() {
 }
 
 function renderInventory() {
-    if (!tableBody) return;
-
     const filtered = getFilteredInventory();
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
-    currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
 
     const startIndex = (currentPage - 1) * pageSize;
-    const pageRecords = filtered.slice(startIndex, startIndex + pageSize);
+    const pageRecords = filtered.slice(
+        startIndex,
+        startIndex + pageSize
+    );
 
     if (pageRecords.length === 0) {
         tableBody.innerHTML = `
@@ -335,19 +351,14 @@ function renderInventory() {
 
     const firstItem = filtered.length === 0 ? 0 : startIndex + 1;
     const lastItem = Math.min(startIndex + pageSize, filtered.length);
-    const paginationInfo = document.getElementById("paginationInfo");
 
-    if (paginationInfo) {
-        paginationInfo.textContent =
-            `Showing ${firstItem}-${lastItem} of ${filtered.length} records`;
-    }
+    document.getElementById("paginationInfo").textContent =
+        `Showing ${firstItem}-${lastItem} of ${filtered.length} records`;
 
     renderPagination(totalPages);
 }
 
 function renderPagination(totalPages) {
-    if (!pagination) return;
-
     let html = `
         <button class="page-button"
             data-page="${currentPage - 1}"
@@ -376,8 +387,7 @@ function openAddModal() {
 
     document.getElementById("inventoryId").value = "";
     document.getElementById("modalTitle").textContent = "Add Inventory";
-    saveButton.textContent = "Save Inventory";
-
+    document.getElementById("saveButton").textContent = "Save Inventory";
     document.getElementById("productGroup").hidden = false;
     document.getElementById("warehouseGroup").hidden = false;
     document.getElementById("activeGroup").hidden = true;
@@ -399,15 +409,14 @@ function openEditModal(id) {
     inventoryForm.reset();
 
     document.getElementById("inventoryId").value = record.id;
-    document.getElementById("quantity").value = record.quantity ?? 0;
-    document.getElementById("reorderLevel").value = record.reorderLevel ?? 0;
-    document.getElementById("maximumStock").value = record.maximumStock ?? 0;
+    document.getElementById("quantity").value = record.quantity;
+    document.getElementById("reorderLevel").value = record.reorderLevel;
+    document.getElementById("maximumStock").value = record.maximumStock;
     document.getElementById("inventoryActive").value =
-        record.active === false ? "false" : "true";
+        record.active === true ? "true" : "false";
 
     document.getElementById("modalTitle").textContent = "Edit Inventory";
-    saveButton.textContent = "Update Inventory";
-
+    document.getElementById("saveButton").textContent = "Update Inventory";
     document.getElementById("productGroup").hidden = true;
     document.getElementById("warehouseGroup").hidden = true;
     document.getElementById("activeGroup").hidden = false;
@@ -435,7 +444,7 @@ async function saveInventory(event) {
     event.preventDefault();
 
     const id = document.getElementById("inventoryId").value;
-    const originalButtonText = editingInventory
+    const saveButtonText = editingInventory
         ? "Update Inventory"
         : "Save Inventory";
 
@@ -453,12 +462,6 @@ async function saveInventory(event) {
         if (maximumStock < reorderLevel) {
             throw new Error(
                 "Maximum stock must be greater than or equal to the reorder level."
-            );
-        }
-
-        if (quantity > maximumStock) {
-            throw new Error(
-                "Quantity cannot be greater than maximum stock."
             );
         }
 
@@ -487,13 +490,10 @@ async function saveInventory(event) {
         saveButton.textContent = editingInventory ? "Updating..." : "Saving...";
 
         if (editingInventory) {
-            await apiRequest(
-                `${INVENTORY_API}/${encodeURIComponent(id)}`,
-                {
-                    method: "PUT",
-                    body: JSON.stringify(payload)
-                }
-            );
+            await apiRequest(`${INVENTORY_API}/${encodeURIComponent(id)}`, {
+                method: "PUT",
+                body: JSON.stringify(payload)
+            });
 
             showToast("Inventory updated successfully.");
         } else {
@@ -509,10 +509,10 @@ async function saveInventory(event) {
         currentPage = 1;
         await loadInventory();
     } catch (error) {
-        showToast(error.message || "Unable to save inventory.", "error");
+        showToast(error.message, "error");
     } finally {
         saveButton.disabled = false;
-        saveButton.textContent = originalButtonText;
+        saveButton.textContent = saveButtonText;
     }
 }
 
@@ -533,22 +533,24 @@ async function deleteInventory(id) {
     if (!confirmed) return;
 
     try {
-        await apiRequest(
-            `${INVENTORY_API}/${encodeURIComponent(id)}`,
-            { method: "DELETE" }
-        );
+        await apiRequest(`${INVENTORY_API}/${encodeURIComponent(id)}`, {
+            method: "DELETE"
+        });
 
         showToast("Inventory deleted successfully.");
 
         const remaining = getFilteredInventory().length - 1;
 
-        if (currentPage > 1 && (currentPage - 1) * pageSize >= remaining) {
+        if (
+            currentPage > 1 &&
+            (currentPage - 1) * pageSize >= remaining
+        ) {
             currentPage--;
         }
 
         await loadInventory();
     } catch (error) {
-        showToast(error.message || "Unable to delete inventory.", "error");
+        showToast(error.message, "error");
     }
 }
 
@@ -561,11 +563,10 @@ document.getElementById("closeModalButton")
 document.getElementById("cancelButton")
     .addEventListener("click", closeModal);
 
-document.getElementById("refreshButton")
-    .addEventListener("click", async () => {
-        await loadReferenceData();
-        await loadInventory();
-    });
+document.getElementById("refreshButton").addEventListener("click", async () => {
+    await loadReferenceData();
+    await loadInventory();
+});
 
 inventoryForm.addEventListener("submit", saveInventory);
 
@@ -582,12 +583,7 @@ stockFilterInput.addEventListener("change", event => {
 });
 
 pageSizeInput.addEventListener("change", event => {
-    const selectedSize = Number(event.target.value);
-
-    if (Number.isInteger(selectedSize) && selectedSize > 0) {
-        pageSize = selectedSize;
-    }
-
+    pageSize = Number(event.target.value);
     currentPage = 1;
     renderInventory();
 });
@@ -597,12 +593,8 @@ pagination.addEventListener("click", event => {
 
     if (!button || button.disabled) return;
 
-    const page = Number(button.dataset.page);
-
-    if (Number.isInteger(page) && page >= 1) {
-        currentPage = page;
-        renderInventory();
-    }
+    currentPage = Number(button.dataset.page);
+    renderInventory();
 });
 
 tableBody.addEventListener("click", event => {
@@ -636,7 +628,7 @@ document.getElementById("menuButton").addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && inventoryModal.classList.contains("show")) {
+    if (event.key === "Escape") {
         closeModal();
     }
 });
@@ -644,12 +636,14 @@ document.addEventListener("keydown", event => {
 async function initializeInventoryPage() {
     updateUserInfo();
 
-    await loadReferenceData();
-    await loadInventory();
+    try {
+        await loadReferenceData();
+        await loadInventory();
+    } catch (error) {
+        showToast(error.message, "error");
+    }
 }
 
 if (token) {
-    initializeInventoryPage().catch(error => {
-        showToast(error.message || "Unable to initialize inventory page.", "error");
-    });
+    initializeInventoryPage();
 }

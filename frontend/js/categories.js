@@ -1,4 +1,3 @@
-
 const API_BASE_URL = "http://localhost:8090";
 const INVENTORY_API = "/inventoryservice";
 const CATEGORY_API = `${INVENTORY_API}/api/categories`;
@@ -41,7 +40,7 @@ async function apiRequest(endpoint, options = {}) {
         }
     });
 
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
         localStorage.removeItem("wareflow_token");
         localStorage.removeItem("wareflow_user");
         window.location.href = "../index.html";

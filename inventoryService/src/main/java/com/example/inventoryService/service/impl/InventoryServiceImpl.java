@@ -16,6 +16,7 @@ import com.example.inventoryService.security.TenantContext;
 import com.example.inventoryService.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class InventoryServiceImpl implements InventoryService {
     private final ProductRepository productRepository;
 
     @Override
+    @Transactional
     public InventoryResponse createInventory(CreateInventoryRequest request) {
 
         Long companyId = TenantContext.getCompanyId();
@@ -82,6 +84,11 @@ public class InventoryServiceImpl implements InventoryService {
                             + "'.");
         }
 
+        if (request.getQuantity() > request.getMaximumStock()) {
+            throw new BadRequestException(
+                    "Quantity cannot exceed maximum stock.");
+        }
+
         Inventory inventory = Inventory.builder()
                 .product(product)
                 .warehouse(warehouse)
@@ -99,6 +106,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Transactional
     public InventoryResponse updateInventory(
             Long id,
             UpdateInventoryRequest request) {
@@ -125,6 +133,11 @@ public class InventoryServiceImpl implements InventoryService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Inventory not found with id : " + id));
+
+        if (request.getQuantity() > request.getMaximumStock()) {
+            throw new BadRequestException(
+                    "Quantity cannot exceed maximum stock.");
+        }
 
         inventory.setQuantity(request.getQuantity());
         inventory.setReorderLevel(request.getReorderLevel());
@@ -174,23 +187,27 @@ public class InventoryServiceImpl implements InventoryService {
                     "Invalid product id.");
         }
 
-        Inventory inventory = inventoryRepository
-                .findByProduct_IdAndCompanyId(
-                        productId,
-                        companyId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Inventory not found for product id : "
-                                        + productId));
+        List<Inventory> rows = inventoryRepository
+                .findByProduct_IdAndCompanyId(productId, companyId)
+                .stream()
+                .filter(Inventory::isActive)
+                .toList();
 
-        if (!inventory.isActive()) {
+        if (rows.isEmpty()) {
             throw new ResourceNotFoundException(
                     "Inventory not found for product id : "
                             + productId);
         }
 
-        return mapToResponse(inventory);
+        // Product may sit in several warehouses: return the first row
+        // with the quantity summed across all of them.
+        InventoryResponse response = mapToResponse(rows.get(0));
+        response.setQuantity(
+                rows.stream().mapToInt(Inventory::getQuantity).sum());
+
+        return response;
     }
+
     @Override
     public List<InventoryResponse> getAllInventory() {
 
@@ -225,6 +242,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Transactional
     public void deleteInventory(Long id) {
 
         Long companyId = TenantContext.getCompanyId();
@@ -247,6 +265,81 @@ public class InventoryServiceImpl implements InventoryService {
         inventory.setActive(false);
 
         inventoryRepository.save(inventory);
+    }
+
+    @Override
+    @Transactional
+    public void deductStock(Long productId, int quantity) {
+
+        Long companyId = requireCompany();
+
+        if (productId == null || productId <= 0 || quantity <= 0) {
+            throw new BadRequestException("Invalid stock request.");
+        }
+
+        List<Inventory> rows =
+                inventoryRepository.findActiveForUpdate(productId, companyId);
+
+        int available = rows.stream().mapToInt(Inventory::getQuantity).sum();
+
+        if (rows.isEmpty() || available < quantity) {
+            throw new BadRequestException(
+                    "Insufficient stock for product id " + productId
+                            + ". Available: " + available
+                            + ", requested: " + quantity);
+        }
+
+        int remaining = quantity;
+
+        for (Inventory row : rows) {
+
+            if (remaining == 0) {
+                break;
+            }
+
+            int take = Math.min(row.getQuantity(), remaining);
+            row.setQuantity(row.getQuantity() - take);
+            remaining -= take;
+        }
+
+        inventoryRepository.saveAll(rows);
+    }
+
+    @Override
+    @Transactional
+    public void restoreStock(Long productId, int quantity) {
+
+        Long companyId = requireCompany();
+
+        if (productId == null || productId <= 0 || quantity <= 0) {
+            throw new BadRequestException("Invalid stock request.");
+        }
+
+        List<Inventory> rows =
+                inventoryRepository.findActiveForUpdate(productId, companyId);
+
+        if (rows.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Inventory not found for product id : " + productId);
+        }
+
+        // Put stock back into the first warehouse row. (Order items do not
+        // record which warehouse the stock came from.)
+        Inventory target = rows.get(0);
+        target.setQuantity(target.getQuantity() + quantity);
+
+        inventoryRepository.save(target);
+    }
+
+    private Long requireCompany() {
+
+        Long companyId = TenantContext.getCompanyId();
+
+        if (companyId == null) {
+            throw new BadRequestException("Company not found in JWT.");
+        }
+
+        return companyId;
     }
 
     private InventoryResponse mapToResponse(Inventory inventory) {

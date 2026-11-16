@@ -1,6 +1,7 @@
 package com.example.OrderService.service;
 
 import com.example.OrderService.dto.request.CreateOrderRequest;
+import com.example.OrderService.dto.request.UpdateOrderPaymentRequest;
 import com.example.OrderService.dto.request.UpdateOrderStatusRequest;
 import com.example.OrderService.dto.response.OrderResponse;
 
@@ -19,6 +20,11 @@ public interface OrderService {
     OrderResponse updateOrderStatus(
             Long id,
             UpdateOrderStatusRequest request
+    );
+
+    OrderResponse updatePaymentStatus(
+            Long id,
+            UpdateOrderPaymentRequest request
     );
 
     void cancelOrder(Long id);

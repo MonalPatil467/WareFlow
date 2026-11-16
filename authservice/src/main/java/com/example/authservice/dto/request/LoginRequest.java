@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 public class LoginRequest {
 
+    @NotBlank(message = "Email is required")
     @Email(message = "Invalid email")
     private String email;
 

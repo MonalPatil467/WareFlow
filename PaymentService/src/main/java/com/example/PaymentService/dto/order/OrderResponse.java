@@ -18,4 +18,8 @@ public class OrderResponse {
     private Long companyId;
 
     private BigDecimal totalAmount;
+
+    private String orderStatus;
+
+    private String paymentStatus;
 }

@@ -1,3 +1,18 @@
+Claude
+
+
+
+
+
+
+
+
+
+
+
+
+
+Warehouses · JS
 
 const API_BASE_URL = "http://localhost:8090";
 const WAREHOUSE_API = "/inventoryservice/api/warehouses";
@@ -33,7 +48,7 @@ async function apiRequest(url, options = {}) {
         }
     });
 
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
         localStorage.removeItem("wareflow_token");
         localStorage.removeItem("wareflow_user");
         window.location.href = "../index.html";
@@ -346,3 +361,4 @@ modal.addEventListener("click", event => {
 });
 
 loadWarehouses();
+Claude finished the response

@@ -22,7 +22,11 @@ public interface InventoryService {
 
     List<InventoryResponse> getLowStockProducts();
 
-
-
     void deleteInventory(Long id);
+
+
+    void deductStock(Long productId, int quantity);
+
+
+    void restoreStock(Long productId, int quantity);
 }

@@ -2,10 +2,12 @@ package com.example.PaymentService.service.impl;
 
 import com.example.PaymentService.client.OrderClient;
 import com.example.PaymentService.dto.order.OrderResponse;
+import com.example.PaymentService.dto.order.UpdateOrderPaymentRequest;
 import com.example.PaymentService.dto.request.CreatePaymentRequest;
 import com.example.PaymentService.dto.request.UpdatePaymentStatusRequest;
 import com.example.PaymentService.dto.response.PaymentResponse;
 import com.example.PaymentService.entity.Payment;
+import com.example.PaymentService.entity.PaymentMethod;
 import com.example.PaymentService.entity.PaymentStatus;
 import com.example.PaymentService.exception.BadRequestException;
 import com.example.PaymentService.exception.ResourceAlreadyExistsException;
@@ -17,7 +19,12 @@ import com.example.PaymentService.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderClient orderClient;
 
     @Override
+    @Transactional
     public PaymentResponse createPayment(
             CreatePaymentRequest request) {
 
@@ -93,7 +101,23 @@ public class PaymentServiceImpl implements PaymentService {
             );
         }
 
+        if ("CANCELLED".equals(order.getOrderStatus())) {
+            throw new BadRequestException(
+                    "Cannot create a payment for a cancelled order.");
+        }
+
+        if ("PAID".equals(order.getPaymentStatus())) {
+            throw new BadRequestException("Order is already paid.");
+        }
+
+        PaymentMethod method = request.getPaymentMethod() != null
+                ? request.getPaymentMethod()
+                : PaymentMethod.CASH_ON_DELIVERY;
+
         Payment payment = Payment.builder()
+                .transactionId("TXN-" + UUID.randomUUID()
+                        .toString().replace("-", "").substring(0, 20).toUpperCase())
+                .paymentMethod(method)
                 .orderId(order.getId())
                 .userId(order.getUserId())
                 .companyId(order.getCompanyId())
@@ -174,7 +198,15 @@ public class PaymentServiceImpl implements PaymentService {
                 .toList();
     }
 
+    private static final Map<PaymentStatus, Set<PaymentStatus>> ALLOWED = Map.of(
+            PaymentStatus.PENDING, Set.of(PaymentStatus.SUCCESS, PaymentStatus.FAILED),
+            PaymentStatus.FAILED, Set.of(PaymentStatus.PENDING),
+            PaymentStatus.SUCCESS, Set.of(PaymentStatus.REFUNDED),
+            PaymentStatus.REFUNDED, Set.of()
+    );
+
     @Override
+    @Transactional
     public PaymentResponse updatePaymentStatus(
             Long id,
             UpdatePaymentStatusRequest request) {
@@ -193,10 +225,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment =
                 paymentRepository
-                        .findByIdAndCompanyId(
-                                id,
-                                companyId
-                        )
+                        .findByIdAndCompanyId(id, companyId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Payment with id "
@@ -204,14 +233,39 @@ public class PaymentServiceImpl implements PaymentService {
                                                 + " not found."
                                 ));
 
-        payment.setPaymentStatus(
-                request.getPaymentStatus()
-        );
+        PaymentStatus current = payment.getPaymentStatus();
+        PaymentStatus next = request.getPaymentStatus();
 
-        Payment updatedPayment =
-                paymentRepository.save(payment);
+        if (current == next) {
+            return mapToResponse(payment);
+        }
 
-        return mapToResponse(updatedPayment);
+        if (!ALLOWED.getOrDefault(current, Set.of()).contains(next)) {
+            throw new BadRequestException(
+                    "Cannot change payment status from "
+                            + current + " to " + next + ".");
+        }
+
+        // Tell OrderService first; if that fails nothing is saved here.
+        try {
+            orderClient.updatePaymentStatus(
+                    payment.getOrderId(),
+                    UpdateOrderPaymentRequest.builder()
+                            .paymentStatus(toOrderPaymentStatus(next))
+                            .build());
+        } catch (Exception e) {
+            throw new BadRequestException(
+                    "Could not update the order. Please try again.");
+        }
+
+        payment.setPaymentStatus(next);
+
+        return mapToResponse(paymentRepository.save(payment));
+    }
+
+    // Payment: PENDING/SUCCESS/FAILED/REFUNDED -> Order: PENDING/PAID/FAILED/REFUNDED
+    private String toOrderPaymentStatus(PaymentStatus status) {
+        return status == PaymentStatus.SUCCESS ? "PAID" : status.name();
     }
 
     private Long getCompanyId() {
@@ -256,6 +310,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         return PaymentResponse.builder()
                 .id(payment.getId())
+                .transactionId(payment.getTransactionId())
+                .paymentMethod(payment.getPaymentMethod() != null
+                        ? payment.getPaymentMethod().name() : null)
                 .orderId(payment.getOrderId())
                 .userId(payment.getUserId())
                 .companyId(payment.getCompanyId())

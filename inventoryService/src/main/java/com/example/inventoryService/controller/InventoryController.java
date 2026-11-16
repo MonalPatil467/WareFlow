@@ -1,5 +1,6 @@
 package com.example.inventoryService.controller;
 
+import com.example.inventoryService.dtos.request.AdjustStockRequest;
 import com.example.inventoryService.dtos.request.CreateInventoryRequest;
 import com.example.inventoryService.dtos.request.UpdateInventoryRequest;
 import com.example.inventoryService.dtos.response.InventoryResponse;
@@ -78,5 +79,25 @@ public class InventoryController {
         return ResponseEntity.ok(
                 inventoryService.getInventoryByProductId(productId)
         );
+    }
+
+    @PostMapping("/product/{productId}/deduct")
+    public ResponseEntity<Void> deductStock(
+            @PathVariable Long productId,
+            @Valid @RequestBody AdjustStockRequest request) {
+
+        inventoryService.deductStock(productId, request.getQuantity());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/product/{productId}/restore")
+    public ResponseEntity<Void> restoreStock(
+            @PathVariable Long productId,
+            @Valid @RequestBody AdjustStockRequest request) {
+
+        inventoryService.restoreStock(productId, request.getQuantity());
+
+        return ResponseEntity.noContent().build();
     }
 }

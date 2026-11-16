@@ -4,13 +4,23 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.Set;
+
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
+
+
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+            "/api/public",
+            "/authservice/api/auth/login",
+            "/api/auth/login"
+    );
 
     private final JwtService jwtService;
 
@@ -23,11 +33,13 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             ServerWebExchange exchange,
             GatewayFilterChain chain) {
 
-        String path = exchange.getRequest()
-                .getURI()
-                .getPath();
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())) {
+            return chain.filter(exchange);
+        }
 
-        if (isPublicEndpoint(path)) {
+        String path = exchange.getRequest().getURI().getPath();
+
+        if (PUBLIC_PATHS.contains(path)) {
             return chain.filter(exchange);
         }
 
@@ -35,9 +47,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 .getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
-
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return unauthorized(exchange);
         }
 
@@ -50,19 +60,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         return chain.filter(exchange);
     }
 
-    private boolean isPublicEndpoint(String path) {
-
-        return path.equals("/api/public")
-                || path.equals("/api/auth/login")
-                || path.equals("/api/auth/register");
-    }
-
-    private Mono<Void> unauthorized(
-            ServerWebExchange exchange) {
-
-        exchange.getResponse()
-                .setStatusCode(HttpStatus.UNAUTHORIZED);
-
+    private Mono<Void> unauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         return exchange.getResponse().setComplete();
     }
 

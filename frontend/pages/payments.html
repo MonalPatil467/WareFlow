@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,6 +115,16 @@
                 <input id="orderId" type="number" min="1" required>
             </div>
 
+            <div class="form-group">
+                <label for="paymentMethod">Payment Method</label>
+                <select id="paymentMethod" required>
+                    <option value="CASH_ON_DELIVERY">Cash on delivery</option>
+                    <option value="CARD">Card</option>
+                    <option value="UPI">UPI</option>
+                    <option value="NET_BANKING">Net banking</option>
+                </select>
+            </div>
+
             <p class="form-hint">The backend retrieves the order amount and creates the payment with PENDING status.</p>
 
             <div class="form-actions">
@@ -170,6 +179,7 @@
     </div>
 </div>
 
+<script src="../js/permissions.js"></script>
 <script src="../js/payments.js"></script>
 </body>
 </html>

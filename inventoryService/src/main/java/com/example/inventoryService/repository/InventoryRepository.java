@@ -1,7 +1,11 @@
 package com.example.inventoryService.repository;
 
 import com.example.inventoryService.entity.Inventory;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +19,8 @@ public interface InventoryRepository
             Long id,
             Long companyId);
 
-    Optional<Inventory> findByProduct_IdAndCompanyId(
+
+    List<Inventory> findByProduct_IdAndCompanyId(
             Long productId,
             Long companyId);
 
@@ -33,4 +38,15 @@ public interface InventoryRepository
 
     List<Inventory> findByQuantityLessThanEqual(
             Integer quantity);
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from Inventory i "
+            + "where i.product.id = :productId "
+            + "and i.companyId = :companyId "
+            + "and i.active = true "
+            + "order by i.id")
+    List<Inventory> findActiveForUpdate(
+            @Param("productId") Long productId,
+            @Param("companyId") Long companyId);
 }

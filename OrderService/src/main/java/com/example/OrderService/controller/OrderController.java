@@ -1,6 +1,7 @@
 package com.example.OrderService.controller;
 
 import com.example.OrderService.dto.request.CreateOrderRequest;
+import com.example.OrderService.dto.request.UpdateOrderPaymentRequest;
 import com.example.OrderService.dto.request.UpdateOrderStatusRequest;
 import com.example.OrderService.dto.response.OrderResponse;
 import com.example.OrderService.service.OrderService;
@@ -60,6 +61,16 @@ public class OrderController {
 
         return ResponseEntity.ok(
                 orderService.updateOrderStatus(id, request)
+        );
+    }
+
+    @PutMapping("/{id}/payment-status")
+    public ResponseEntity<OrderResponse> updatePaymentStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateOrderPaymentRequest request) {
+
+        return ResponseEntity.ok(
+                orderService.updatePaymentStatus(id, request)
         );
     }
 

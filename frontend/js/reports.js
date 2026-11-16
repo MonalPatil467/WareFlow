@@ -1,4 +1,3 @@
-
 const GATEWAY = "http://localhost:8090";
 
 const API = {
@@ -55,7 +54,7 @@ async function apiRequest(url) {
         }
     });
 
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
         localStorage.removeItem("wareflow_token");
         localStorage.removeItem("wareflow_user");
         window.location.href = "../index.html";

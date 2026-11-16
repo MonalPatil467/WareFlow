@@ -15,6 +15,8 @@ public class PaymentResponse {
 
     private Long id;
 
+    private String transactionId;
+
     private Long orderId;
 
     private Long userId;
