@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Companies | WareFlow</title>
+    <!-- Reuses the suppliers layout styles; companies.css only adds a few extras -->
+    <link rel="stylesheet" href="../css/suppliers.css">
+    <link rel="stylesheet" href="../css/companies.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="brand-icon">W</div>
+            <div>
+                <h2>WareFlow</h2>
+                <span>Inventory Management</span>
+            </div>
+        </div>
+
+        <div class="nav-label">PLATFORM</div>
+
+        <nav class="navigation">
+            <a href="../dashboard.html"><span>▦</span> Dashboard</a>
+            <a href="companies.html" class="active"><span>🏢</span> Companies</a>
+            <a href="../register.html"><span>♙</span> Add User</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile">
+                <div class="avatar" id="userAvatar">W</div>
+                <div class="profile-info">
+                    <strong id="userName">Super Admin</strong>
+                    <span>Platform administrator</span>
+                </div>
+            </div>
+            <button class="logout-button" id="logoutButton">↪ Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <button class="menu-button" id="menuButton">☰</button>
+            <div>
+                <p class="breadcrumb">Platform / Companies</p>
+                <h1>Companies</h1>
+            </div>
+            <button class="primary-button" id="addCompanyButton">＋ Add Company</button>
+        </header>
+
+        <section class="welcome-section">
+            <h2>Company Management</h2>
+            <p>Create the companies that use WareFlow, then add an admin for each one.</p>
+        </section>
+
+        <section class="stats-grid">
+            <article class="stat-card">
+                <div class="stat-heading">Total Companies</div>
+                <div class="stat-value" id="totalCompanies">0</div>
+                <div class="stat-description">All registered companies</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-heading">Active</div>
+                <div class="stat-value" id="activeCompanies">0</div>
+                <div class="stat-description">Currently active</div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-heading">Inactive</div>
+                <div class="stat-value" id="inactiveCompanies">0</div>
+                <div class="stat-description">Currently inactive</div>
+            </article>
+        </section>
+
+        <section class="content-card">
+            <div class="content-heading">
+                <div>
+                    <h2>All Companies</h2>
+                    <p>Use the company ID when you create its admin user.</p>
+                </div>
+                <button class="secondary-button" id="refreshButton">↻ Refresh</button>
+            </div>
+
+            <div class="filters">
+                <div class="search-box">
+                    <span>⌕</span>
+                    <input type="search" id="searchInput" placeholder="Search name, email, GST or city">
+                </div>
+
+                <select id="pageSize" aria-label="Rows per page">
+                    <option value="5">5 per page</option>
+                    <option value="10" selected>10 per page</option>
+                    <option value="20">20 per page</option>
+                </select>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Company</th>
+                        <th>Contact</th>
+                        <th>Location</th>
+                        <th>Plan</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="companyTableBody">
+                    <tr>
+                        <td colspan="7" class="empty-state">Loading companies...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-footer">
+                <span id="paginationInfo">Showing 0 companies</span>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="modal-overlay" id="companyModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">Add Company</h2>
+                <p>Enter the company's business details.</p>
+            </div>
+            <button class="close-button" id="closeModalButton">×</button>
+        </div>
+
+        <form id="companyForm">
+            <input type="hidden" id="companyId">
+
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="companyName">Company Name <span>*</span></label>
+                    <input type="text" id="companyName" maxlength="150" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email <span>*</span></label>
+                    <input type="email" id="email" maxlength="150" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone <span>*</span></label>
+                    <input type="tel" id="phone" maxlength="30" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gstNumber">GST Number <span>*</span></label>
+                    <input type="text" id="gstNumber" maxlength="30" required>
+                </div>
+
+                <div class="form-group" id="planGroup">
+                    <label for="subscriptionPlan">Subscription Plan <span>*</span></label>
+                    <select id="subscriptionPlan">
+                        <option value="FREE">Free</option>
+                        <option value="BASIC">Basic</option>
+                        <option value="PREMIUM">Premium</option>
+                        <option value="ENTERPRISE">Enterprise</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="address">Address <span>*</span></label>
+                    <input type="text" id="address" maxlength="255" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="city">City <span>*</span></label>
+                    <input type="text" id="city" maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="state">State <span>*</span></label>
+                    <input type="text" id="state" maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country <span>*</span></label>
+                    <input type="text" id="country" maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="postalCode">Postal Code <span>*</span></label>
+                    <input type="text" id="postalCode" maxlength="20" required>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="secondary-button" id="cancelButton">Cancel</button>
+                <button type="submit" class="primary-button" id="saveButton">Save Company</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../js/permissions.js"></script>
+<script src="../js/companies.js"></script>
+</body>
+</html>
