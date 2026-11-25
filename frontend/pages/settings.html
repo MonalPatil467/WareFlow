@@ -1,0 +1,176 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WareFlow | Settings & Profile</title>
+    <link rel="stylesheet" href="../css/settings.css">
+    <script src="../js/settings.js" defer></script>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">WareFlow</div>
+        <p class="menu-label">WORKSPACE</p>
+        <nav>
+            <a href="../dashboard.html">Dashboard</a>
+            <a href="products.html">Products</a>
+            <a href="categories.html">Categories</a>
+            <a href="suppliers.html">Suppliers</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="warehouses.html">Warehouses</a>
+            <a href="orders.html">Orders</a>
+            <a href="payments.html">Payments</a>
+            <a href="reports.html">Reports & Analytics</a>
+            <a class="active" href="settings.html">Settings & Profile</a>
+        </nav>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Settings & Profile</h1>
+                <p>Manage your account information and preferences.</p>
+            </div>
+        </header>
+
+        <div id="message" class="message" role="status"></div>
+
+        <section class="profile-card">
+            <div class="avatar" id="avatar">WF</div>
+            <div class="profile-heading">
+                <h2 id="displayName">WareFlow User</h2>
+                <p id="displayEmail">Email not available</p>
+                <span id="displayRole" class="role-badge">USER</span>
+            </div>
+            <div class="account-status">
+                <span class="status-dot"></span>
+                Signed in
+            </div>
+        </section>
+
+        <section class="settings-grid">
+            <article class="panel">
+                <div class="panel-heading">
+                    <h2>Account Information</h2>
+                    <p>Details available from your current login session.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input id="firstName" type="text" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input id="lastName" type="text" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input id="email" type="email" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <input id="role" type="text" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyId">Company ID</label>
+                    <input id="companyId" type="text" readonly>
+                </div>
+
+                <p class="info-note">
+                    Profile editing requires a profile API endpoint in the backend.
+                </p>
+            </article>
+
+            <article class="panel">
+                <div class="panel-heading">
+                    <h2>Preferences</h2>
+                    <p>These preferences are saved in this browser.</p>
+                </div>
+
+                <form id="preferencesForm">
+                    <div class="setting-row">
+                        <div>
+                            <h3>Email Notifications</h3>
+                            <p>Enable your local notification preference.</p>
+                        </div>
+                        <label class="switch">
+                            <input id="emailNotifications" type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <h3>Low Stock Alerts</h3>
+                            <p>Enable your local low-stock alert preference.</p>
+                        </div>
+                        <label class="switch">
+                            <input id="lowStockAlerts" type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <h3>Order Updates</h3>
+                            <p>Enable your local order-update preference.</p>
+                        </div>
+                        <label class="switch">
+                            <input id="orderUpdates" type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group theme-group">
+                        <label for="theme">Appearance</label>
+                        <select id="theme">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+
+                    <button class="primary-btn" type="submit">Save Preferences</button>
+                </form>
+            </article>
+
+            <article class="panel security-panel">
+                <div class="panel-heading">
+                    <h2>Security</h2>
+                    <p>Manage your current session.</p>
+                </div>
+
+                <div class="security-row">
+                    <div>
+                        <h3>Authentication</h3>
+                        <p>Your requests use the current login token.</p>
+                    </div>
+                    <span class="security-badge">JWT</span>
+                </div>
+
+                <div class="security-row">
+                    <div>
+                        <h3>Sign out</h3>
+                        <p>Remove the saved login session from this browser.</p>
+                    </div>
+                    <button type="button" id="securityLogout" class="danger-btn">Logout</button>
+                </div>
+
+                <div class="info-note">
+                    Password changes are not available until a backend password-update endpoint is implemented.
+                </div>
+            </article>
+        </section>
+
+        <footer class="footer">WareFlow Inventory Management</footer>
+    </main>
+</div>
+</body>
+</html>
+```

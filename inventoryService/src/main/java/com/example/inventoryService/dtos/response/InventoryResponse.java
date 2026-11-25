@@ -21,7 +21,9 @@ public class InventoryResponse {
 
     private Integer maximumStock;
 
-    private String warehouseLocation;
+    private Long warehouseId;
+
+    private String warehouseName;
 
     private boolean active;
 }

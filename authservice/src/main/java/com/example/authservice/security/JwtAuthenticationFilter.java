@@ -30,41 +30,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String email;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
+        try {
 
-        email = jwtService.extractUsername(jwt);
+            String jwt = authHeader.substring(7);
+            String email = jwtService.extractUsername(jwt);
 
-        if (email != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(email);
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(email);
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (userDetails.isEnabled()
+                        && jwtService.isTokenValid(jwt, userDetails)) {
 
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                authenticationToken.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
+                    authenticationToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authenticationToken);
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authenticationToken);
+                }
             }
+
+        } catch (Exception ex) {
+
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
